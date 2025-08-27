@@ -24,6 +24,11 @@ app.get('/', (req, res) => {
 // bump JSON limit so data URLs don’t get cut off
 app.use(express.json({ limit: '15mb' }));
 
+// Add a simple chat test route
+app.get('/chat/test', (req, res) => {
+  res.json({ message: 'Chat route is working!', status: 'ok' });
+});
+
 // Temporarily comment out chat routes to isolate the issue
 // app.use('/chat', chatRoutes);
 
