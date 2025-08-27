@@ -1,12 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import chatRoutes from './routes/chat.js';
-
-// Add a simple test route to debug
-app.get('/test', (req, res) => {
-  res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });
-});
 
 dotenv.config();
 
@@ -17,10 +11,21 @@ app.use(cors({
   origin: ['http://localhost:3000', 'https://cortex-ai.vercel.app'],
   credentials: true 
 }));
+
+// Add a simple test route to debug
+app.get('/test', (req, res) => {
+  res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });
+});
+
+// Simple root endpoint
+app.get('/', (req, res) => {
+  res.json({ message: 'Express server is running!', status: 'ok' });
+});
 // bump JSON limit so data URLs don’t get cut off
 app.use(express.json({ limit: '15mb' }));
 
-app.use('/chat', chatRoutes);
+// Temporarily comment out chat routes to isolate the issue
+// app.use('/chat', chatRoutes);
 
 const PORT = process.env.PORT || 3001;
 
