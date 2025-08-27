@@ -8,7 +8,7 @@ const app = express();
 
 // allow your front-end origin
 app.use(cors({ 
-  origin: ['http://localhost:3000', 'https://cortex-ai.vercel.app'],
+  origin: ['http://localhost:3000', 'https://cortex-ai-alpha.vercel.app'],
   credentials: true 
 }));
 
