@@ -3,6 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import chatRoutes from './routes/chat.js';
 
+// Add a simple test route to debug
+app.get('/test', (req, res) => {
+  res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });
+});
+
 dotenv.config();
 
 const app = express();
