@@ -29,6 +29,19 @@ app.get('/chat/test', (req, res) => {
   res.json({ message: 'Chat route is working!', status: 'ok' });
 });
 
+// Add basic chat routes without complex services
+app.get('/chat', (req, res) => {
+  res.json({ message: 'Chat endpoint reached!', status: 'ok' });
+});
+
+app.post('/chat/start', (req, res) => {
+  res.json({ message: 'Chat start endpoint reached!', status: 'ok' });
+});
+
+app.get('/chat/sessions', (req, res) => {
+  res.json({ message: 'Chat sessions endpoint reached!', status: 'ok' });
+});
+
 // Temporarily comment out chat routes to isolate the issue
 // app.use('/chat', chatRoutes);
 
