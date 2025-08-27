@@ -47,8 +47,9 @@ app.get('/chat/sessions', (req, res) => {
   res.json({ message: 'Chat sessions endpoint reached!', status: 'ok' });
 });
 
-// Temporarily comment out chat routes to isolate the issue
-// app.use('/chat', chatRoutes);
+// Add the real chat routes
+import chatRoutes from './routes/chat.js';
+app.use('/chat', chatRoutes);
 
 const PORT = process.env.PORT || 3001;
 
