@@ -38,6 +38,11 @@ app.post('/chat/start', (req, res) => {
   res.json({ message: 'Chat start endpoint reached!', status: 'ok' });
 });
 
+// Add GET version for testing
+app.get('/chat/start', (req, res) => {
+  res.json({ message: 'Chat start GET endpoint reached!', status: 'ok', method: 'GET' });
+});
+
 app.get('/chat/sessions', (req, res) => {
   res.json({ message: 'Chat sessions endpoint reached!', status: 'ok' });
 });
