@@ -11,10 +11,16 @@ const openai = new OpenAI({
 
 const promptDirectory = path.resolve("prompts");
 
-export const getChatResponse = async (message, mode) => {
+export const getChatResponse = async (message, mode, exampleCount = 9) => {
   try {
-    const promptFile =
-      mode === "example" ? "ExampleLearnPrompt.txt" : "DeepDivePrompt.txt";
+    const promptFile = 
+      mode === "example" && exampleCount === 3 ? "ExampleLearnPrompt3.txt" :
+      mode === "example" && exampleCount === 6 ? "ExampleLearnPrompt6.txt" :
+      mode === "example" && exampleCount === 9 ? "ExampleLearnPrompt.txt" :
+      mode === "learnchat" ? "LearnChatPrompt.txt" :
+      "DeepDivePrompt.txt";
+
+    console.log(`📝 Loading prompt: ${promptFile} for mode: ${mode}, examples: ${exampleCount}`);
 
     const systemPrompt = fs.readFileSync(
       path.join(promptDirectory, promptFile),
@@ -24,9 +30,18 @@ export const getChatResponse = async (message, mode) => {
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1",
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message },
+        { role: "system", content: systemPrompt },   // ← the file above
+        { role: "user", content: message }           // ← just topic/problem text; no instructions
       ],
+      stop: [
+        "<!--EXPLANATION_END-->",
+        "<!--STEPS_END-->",
+        "<!--SOLVE_END-->",
+        "<!--PRACTICE_END-->",
+        "<!--SOLUTION_END-->"
+      ],
+      temperature: 0.2,
+      max_tokens: 4600
     });
 
     return completion.choices[0].message.content;
@@ -37,10 +52,16 @@ export const getChatResponse = async (message, mode) => {
 };
 
 // NEW: Streaming version of getChatResponse
-export const streamChatResponse = async (message, mode) => {
+export const streamChatResponse = async (message, mode, exampleCount = 9) => {
   try {
-    const promptFile =
-      mode === "example" ? "ExampleLearnPrompt.txt" : "DeepDivePrompt.txt";
+    const promptFile = 
+      mode === "example" && exampleCount === 3 ? "ExampleLearnPrompt3.txt" :
+      mode === "example" && exampleCount === 6 ? "ExampleLearnPrompt6.txt" :
+      mode === "example" && exampleCount === 9 ? "ExampleLearnPrompt.txt" :
+      mode === "learnchat" ? "LearnChatPrompt.txt" :
+      "DeepDivePrompt.txt";
+
+    console.log(`📝 [STREAM] Loading prompt: ${promptFile} for mode: ${mode}, examples: ${exampleCount}`);
 
     const systemPrompt = fs.readFileSync(
       path.join(promptDirectory, promptFile),
@@ -73,10 +94,18 @@ export const streamChatWithVision = async ({
   message,
   images = [],
   mode = "example",
+  exampleCount = 9,
 }) => {
   try {
-    const promptFile =
-      mode === "example" ? "ExampleLearnPrompt.txt" : "DeepDivePrompt.txt";
+    const promptFile = 
+      mode === "example" && exampleCount === 3 ? "ExampleLearnPrompt3.txt" :
+      mode === "example" && exampleCount === 6 ? "ExampleLearnPrompt6.txt" :
+      mode === "example" && exampleCount === 9 ? "ExampleLearnPrompt.txt" :
+      mode === "learnchat" ? "LearnChatPrompt.txt" :
+      "DeepDivePrompt.txt";
+    
+    console.log(`📝 [VISION-STREAM] Loading prompt: ${promptFile} for mode: ${mode}, examples: ${exampleCount}`);
+    
     const systemPrompt = fs.readFileSync(
       path.join(promptDirectory, promptFile),
       "utf-8"
@@ -111,10 +140,18 @@ export async function chatWithVision({
   message,
   images = [],
   mode = "example",
+  exampleCount = 9,
 }) {
   // load the same prompt file you use for text-only
-  const promptFile =
-    mode === "example" ? "ExampleLearnPrompt.txt" : "DeepDivePrompt.txt";
+  const promptFile = 
+    mode === "example" && exampleCount === 3 ? "ExampleLearnPrompt3.txt" :
+    mode === "example" && exampleCount === 6 ? "ExampleLearnPrompt6.txt" :
+    mode === "example" && exampleCount === 9 ? "ExampleLearnPrompt.txt" :
+    mode === "learnchat" ? "LearnChatPrompt.txt" :
+    "DeepDivePrompt.txt";
+  
+  console.log(`📝 [VISION] Loading prompt: ${promptFile} for mode: ${mode}, examples: ${exampleCount}`);
+  
   const systemPrompt = fs.readFileSync(
     path.join(promptDirectory, promptFile),
     "utf-8"
@@ -126,11 +163,20 @@ export async function chatWithVision({
   }
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-4.1",
     messages: [
-      { role: "system", content: systemPrompt }, // <-- add your prompt here
-      { role: "user", content },
+      { role: "system", content: systemPrompt },   // ← the file above
+      { role: "user", content: message }           // ← just topic/problem text; no instructions
     ],
+    stop: [
+      "<!--EXPLANATION_END-->",
+      "<!--STEPS_END-->",
+      "<!--SOLVE_END-->",
+      "<!--PRACTICE_END-->",
+      "<!--SOLUTION_END-->"
+    ],
+    temperature: 0.2,
+    max_tokens: 4600
   });
 
   return completion.choices?.[0]?.message?.content ?? "";

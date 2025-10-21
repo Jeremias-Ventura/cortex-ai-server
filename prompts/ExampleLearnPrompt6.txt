@@ -288,101 +288,6 @@ D: This is 3x³, which would be the derivative of x⁴, not x³.
 ---
 
 
-<!--EXAMPLE3_HEADER_START-->
-(Show a challenging example that introduces a twist. Again, explain step-by-step and show where you get certain things from if it's from a formula, idea, concept, etc. Only explain when needed; focus more on showing the work rather than long theory dumps. Highlight similarities/differences from both beginner and mid-level examples. End with a summary.)
-<!--EXAMPLE3_HEADER_START-->
-# Advanced-Level Examples
-<!--EXAMPLE3_HEADER_END-->
----
-
-<!--EXAMPLE3_SBYS_START-->
-## **General Approach For These Problems:**
-### 1. ...
-### 2. ...
-### 3. ...
-and so on
-
-#### ***NOTE: ...***
-<!--EXAMPLE3_SBYS_END-->
----
-
-<!--EXAMPLE3_EX1_START-->
-## Example #1
-#### 1.[Problem/scenario statement]
-
-[Show ALL intermediate steps/calculations/reasoning here with brief labels]
-[For math: show each algebraic step, substitution, simplification]
-[For science: show data → formula → calculation → result]
-[For other subjects: show the thinking process broken down]
-
-**Final answer:** [Answer clearly stated]
-<!--EXAMPLE3_EX1_END-->
----
-
-<!--EXAMPLE3_EX1SUM_START-->
-#### (just a quick summary of the example be intentional tie back past examples to make user understand better, 1-3 sentences)
-<!--EXAMPLE3_EX1SUM_END-->
----
-
-<!--EXAMPLE3_EX2_START-->
-## Example #2
-#### 2.[Problem/scenario statement]
-
-[Show ALL intermediate steps/calculations/reasoning here with brief labels]
-[For math: show each algebraic step, substitution, simplification]
-[For science: show data → formula → calculation → result]
-[For other subjects: show the thinking process broken down]
-
-**Final answer:** [Answer clearly stated]
-<!--EXAMPLE3_EX2_END-->
----
-
-<!--EXAMPLE3_EX2SUM_START-->
-#### (just a quick summary of the example be intentional tie back past examples to make user understand better, 1-3 sentences)
-<!--EXAMPLE3_EX2SUM_END-->
----
-
-<!--EXAMPLE3_EX3_START-->
-## Example #3
-#### 3.[Problem/scenario statement]
-
-[Show ALL intermediate steps/calculations/reasoning here with brief labels]
-[For math: show each algebraic step, substitution, simplification]
-[For science: show data → formula → calculation → result]
-[For other subjects: show the thinking process broken down]
-
-**Final answer:** [Answer clearly stated]
-<!--EXAMPLE3_EX3_END-->
----
-
-<!--EXAMPLE3_EX3SUM_START-->
-#### (just a quick summary of the example be intentional tie back past examples to make user understand better, 1-3 sentences)
-<!--EXAMPLE3_EX3SUM_END-->
----
-
-
-<!--EXAMPLE3_CHECKPOINT_START-->
-# Checkpoint 3 
-(Ask a simple question with the multiple choice answer to check the user's understanding. Shouldn't take too long to answer, something simple that makes sure they are actually understanding)
-ex:
-**Question:** What is the derivative of x³?
-
-**A)** 2x²  
-**B)** 3x²  
-**C)** x²  
-**D)** 3x³  
-
-*Choose the correct answer to continue.*
-<!--EXAMPLE3_CHECKPOINT_END-->
----
-<!--EXAMPLE3_ANSWER_START--> 
-Answer: B (JUST THE LETTER and make sure its formatted like that everytime)
-A: This is 2x², which is the derivative of x², not x³.
-B: This is 3x², which is the correct derivative of x³ using the power rule.
-C: This is x², which is the derivative of x, not x³.
-D: This is 3x³, which would be the derivative of x⁴, not x³.
-<!--EXAMPLE3_ANSWER_END-->
----
 <!--PRACTICE_START-->
 (One slightly harder problem but still achievable with the steps given.)
 # Last Checkpoint
@@ -413,7 +318,7 @@ D: This is 3x³, which would be the derivative of x⁴, not x³.
 ---
 
 STRICT RULES:
-	•	Exactly 40 sections, exactly 40 --- separators (one between each pair of sections).
+	•	Exactly 30 sections, exactly 30 --- separators (one between each pair of sections).
 	•	Follow every header rule given: # Titles, ## Steps, ### Hints, etc.
 	•	Reuse the same step names in both solution sections.
 	•	For the # Example sections, give 3 or more examples.

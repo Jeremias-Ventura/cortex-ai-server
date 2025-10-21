@@ -10,8 +10,10 @@ import {
   getMessages,
   supabase,
 } from "../services/supabaseService.js";
+import parseResponse from "../parseSections.js";
 
 const router = express.Router();
+
 
 // Test Supabase connection FIRST to avoid conflict with :session_id
 router.get("/test-supabase", async (req, res) => {
@@ -28,9 +30,10 @@ router.get("/test-supabase", async (req, res) => {
   }
 });
 
-// NEW: Streaming endpoint
+// Streaming endpoint
 router.get("/stream", async (req, res) => {
-  const { session_id, message, mode = "example" } = req.query;
+  const { session_id, message, mode, exampleCount } = req.query;
+  console.log(`🔄 Stream: mode=${mode}, examples=${exampleCount || 9}`);
 
   // Set up Server-Sent Events headers
   res.writeHead(200, {
@@ -48,22 +51,94 @@ router.get("/stream", async (req, res) => {
 
   try {
     console.log(`🔄 Starting stream for session ${session_id}, mode: ${mode}`);
+    
+    // Validate mode parameter
+    if (!mode) {
+      console.error("❌ Mode parameter is missing!");
+      res.write(`data: ${JSON.stringify({
+        type: "error",
+        error: "Mode parameter is required",
+      })}\n\n`);
+      res.end();
+      return;
+    }
 
     // Use text-only streaming for GET requests (images come via POST)
-    const stream = await streamChatResponse(message, mode);
+    const stream = await streamChatResponse(message, mode, parseInt(exampleCount) || 9);
+
+    let fullResponse = "";
+    let sentInitialSections = false;
 
     // Process the streaming response
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content;
       if (content) {
+        fullResponse += content;
         // Send chunk to frontend
         res.write(`data: ${JSON.stringify({ type: "chunk", content })}\n\n`);
+
+        // Check if we have enough content for first 15 sections
+        if (!sentInitialSections) {
+          const currentSections = parseResponse(fullResponse);
+          
+          // Once we have at least 15 sections, send them immediately
+          if (currentSections.length >= 15) {
+            const initialSections = currentSections.slice(0, 15);
+            res.write(
+              `data: ${JSON.stringify({ 
+                type: "sectionsReady", 
+                sections: initialSections 
+              })}\n\n`
+            );
+            console.log(`🚀 Sent first 15 sections to frontend (out of ${currentSections.length} so far)`);
+            sentInitialSections = true;
+          }
+        }
       }
     }
 
+    // Parse the complete response into sections
+    const sections = parseResponse(fullResponse);
+
+    // Debug logging to see parsed sections
+    console.log("🔍 RAW RESPONSE LENGTH:", fullResponse.length);
+    console.log("📊 PARSED SECTIONS COUNT:", sections.length);
+    console.log(
+      "📋 SECTIONS TYPES:",
+      sections.map((s) => s.type)
+    );
+    console.log(
+      "📝 FIRST SECTION PREVIEW:",
+      sections[0]?.content?.substring(0, 100) + "..."
+    );
+
+    // Log each section details
+    sections.forEach((section, index) => {
+      console.log(`\n--- SECTION ${index + 1} ---`);
+      console.log(`Type: ${section.type}`);
+      console.log(`Title: ${section.title}`);
+      console.log(`Content Length: ${section.content.length}`);
+      console.log(`Preview: ${section.content.substring(0, 150)}...`);
+    });
+
+    // Send remaining sections (if any beyond the first 15)
+    if (sections.length > 15) {
+      const remainingSections = sections.slice(15);
+      res.write(
+        `data: ${JSON.stringify({ 
+          type: "remainingSections", 
+          sections: remainingSections,
+          startIndex: 15
+        })}\n\n`
+      );
+      console.log(`📦 Sent remaining ${remainingSections.length} sections (sections 15-${sections.length - 1})`);
+    }
+
     // Send completion signal
-    res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
-    console.log(`✅ Stream completed for session ${session_id}`);
+    res.write(
+      `data: ${JSON.stringify({ type: "done", totalSections: sections.length })}\n\n`
+    );
+    console.log(`✅ Stream completed for session ${session_id} - Total sections: ${sections.length}`);
   } catch (error) {
     console.error("Streaming error:", error);
     res.write(
@@ -80,7 +155,8 @@ router.get("/stream", async (req, res) => {
 
 // NEW: Streaming endpoint for images (POST request to handle image data)
 router.post("/stream", express.json({ limit: "15mb" }), async (req, res) => {
-  const { session_id, message = "", images = [], mode = "example" } = req.body;
+  const { session_id, message = "", images = [], mode, exampleCount } = req.body;
+  console.log(`🔄 Vision stream: mode=${mode}, examples=${exampleCount || 9}`);
 
   // Set up Server-Sent Events headers
   res.writeHead(200, {
@@ -98,8 +174,19 @@ router.post("/stream", express.json({ limit: "15mb" }), async (req, res) => {
 
   try {
     console.log(
-      `🔄 Starting vision stream for session ${session_id}, images: ${images.length}`
+      `🔄 Starting vision stream for session ${session_id}, images: ${images.length}, mode: ${mode}`
     );
+    
+    // Validate mode parameter
+    if (!mode) {
+      console.error("❌ Mode parameter is missing!");
+      res.write(`data: ${JSON.stringify({
+        type: "error",
+        error: "Mode parameter is required",
+      })}\n\n`);
+      res.end();
+      return;
+    }
 
     const safeImages = Array.isArray(images)
       ? images.filter(
@@ -114,24 +201,86 @@ router.post("/stream", express.json({ limit: "15mb" }), async (req, res) => {
         message,
         images: safeImages,
         mode,
+        exampleCount: parseInt(exampleCount) || 9,
       });
     } else {
       // Use text-only streaming if no images
-      stream = await streamChatResponse(message, mode);
+      stream = await streamChatResponse(message, mode, parseInt(exampleCount) || 9);
     }
+
+    let fullResponse = "";
+    let sentInitialSections = false;
 
     // Process the streaming response
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content;
       if (content) {
+        fullResponse += content;
         // Send chunk to frontend
         res.write(`data: ${JSON.stringify({ type: "chunk", content })}\n\n`);
+
+        // Check if we have enough content for first 15 sections
+        if (!sentInitialSections) {
+          const currentSections = parseResponse(fullResponse);
+          
+          // Once we have at least 15 sections, send them immediately
+          if (currentSections.length >= 15) {
+            const initialSections = currentSections.slice(0, 15);
+            res.write(
+              `data: ${JSON.stringify({ 
+                type: "sectionsReady", 
+                sections: initialSections 
+              })}\n\n`
+            );
+            console.log(`🚀 Sent first 15 sections to frontend (out of ${currentSections.length} so far)`);
+            sentInitialSections = true;
+          }
+        }
       }
     }
 
+    // Parse the complete response into sections
+    const sections = parseResponse(fullResponse);
+
+    // Debug logging to see parsed sections
+    console.log("🔍 RAW RESPONSE LENGTH:", fullResponse.length);
+    console.log("📊 PARSED SECTIONS COUNT:", sections.length);
+    console.log(
+      "📋 SECTIONS TYPES:",
+      sections.map((s) => s.type)
+    );
+    console.log(
+      "📝 FIRST SECTION PREVIEW:",
+      sections[0]?.content?.substring(0, 100) + "..."
+    );
+
+    // Log each section details
+    sections.forEach((section, index) => {
+      console.log(`\n--- SECTION ${index + 1} ---`);
+      console.log(`Type: ${section.type}`);
+      console.log(`Title: ${section.title}`);
+      console.log(`Content Length: ${section.content.length}`);
+      console.log(`Preview: ${section.content.substring(0, 150)}...`);
+    });
+
+    // Send remaining sections (if any beyond the first 15)
+    if (sections.length > 15) {
+      const remainingSections = sections.slice(15);
+      res.write(
+        `data: ${JSON.stringify({ 
+          type: "remainingSections", 
+          sections: remainingSections,
+          startIndex: 15
+        })}\n\n`
+      );
+      console.log(`📦 Sent remaining ${remainingSections.length} sections (sections 15-${sections.length - 1})`);
+    }
+
     // Send completion signal
-    res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
-    console.log(`✅ Vision stream completed for session ${session_id}`);
+    res.write(
+      `data: ${JSON.stringify({ type: "done", totalSections: sections.length })}\n\n`
+    );
+    console.log(`✅ Vision stream completed for session ${session_id} - Total sections: ${sections.length}`);
   } catch (error) {
     console.error("Vision streaming error:", error);
     res.write(
@@ -147,11 +296,40 @@ router.post("/stream", express.json({ limit: "15mb" }), async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { message, mode } = req.body;
+  const { message, mode, exampleCount } = req.body;
 
   try {
-    const reply = await getChatResponse(message, mode);
-    res.json({ response: reply });
+    //
+    const rawReply = await getChatResponse(message, mode, parseInt(exampleCount) || 9);
+
+    // parse into sections
+    const sections = parseResponse(rawReply);
+
+    // Debug logging to see parsed sections
+    console.log("🔍 RAW RESPONSE LENGTH:", rawReply.length);
+    console.log("📊 PARSED SECTIONS COUNT:", sections.length);
+    console.log(
+      "📋 SECTIONS TYPES:",
+      sections.map((s) => s.type)
+    );
+    console.log(
+      "📝 FIRST SECTION PREVIEW:",
+      sections[0]?.content?.substring(0, 100) + "..."
+    );
+
+    // Log each section details
+    sections.forEach((section, index) => {
+      console.log(`\n--- SECTION ${index + 1} ---`);
+      console.log(`Type: ${section.type}`);
+      console.log(`Title: ${section.title}`);
+      console.log(`Content Length: ${section.content.length}`);
+      console.log(`Preview: ${section.content.substring(0, 150)}...`);
+    });
+
+    res.json({
+      sections: sections,
+      rawResponse: rawReply,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Something went wrong." });
@@ -190,7 +368,7 @@ router.get("/sessions", async (req, res) => {
 
 router.post("/complete", express.json({ limit: "15mb" }), async (req, res) => {
   try {
-    const { message = "", images = [], mode = "example" } = req.body;
+    const { message = "", images = [], mode = "example", exampleCount } = req.body;
 
     console.log("Server got images:", images?.length);
     const safeImages = Array.isArray(images)
@@ -199,7 +377,12 @@ router.post("/complete", express.json({ limit: "15mb" }), async (req, res) => {
         )
       : [];
 
-    const reply = await chatWithVision({ message, images: safeImages, mode });
+    const reply = await chatWithVision({ 
+      message, 
+      images: safeImages, 
+      mode, 
+      exampleCount: parseInt(exampleCount) || 9 
+    });
     res.json({ response: reply });
   } catch (err) {
     console.error("chat/complete error:", err);
